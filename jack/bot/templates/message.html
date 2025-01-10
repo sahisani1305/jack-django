@@ -270,91 +270,94 @@ nav {
 
     <script type="text/javascript">
         let botTyping = false;
-let botMessageChanged = false;
-let isKeyboardVisible = false;
-let userIsScrolling = false;
-let userId = "user1"; // You should generate a unique user ID per user/session in a real scenario
+        let botMessageChanged = false;
+        let isKeyboardVisible = false;
+        let userIsScrolling = false;
+        let userId = "user1"; // You should generate a unique user ID per user/session in a real scenario
+        let registrationStep = 0;
+        let userName = '';
+        let userMobile = '';
 
-window.onload = function () {
-    addMessageToChat('bot', "Hello!| How can I help you today?|~for testing use: ~hello ~how are you ~what can you do ~who are you ~what is your name ~help ~bye", true);
-    window.addEventListener('resize', handleResize);
-    const chatContainer = document.getElementById('chatContainer');
-    chatContainer.addEventListener('scroll', function () {
-        if (chatContainer.scrollTop + chatContainer.clientHeight < chatContainer.scrollHeight) {
-            userIsScrolling = true;
-        } else {
-            userIsScrolling = false;
-        }
-    });
-};
+        window.onload = function () {
+            addMessageToChat('bot', "Hello!| How can I help you today?|~for testing use: ~hello ~how are you ~what can you do ~who are you ~what is your name ~help ~bye ~register", true);
+            window.addEventListener('resize', handleResize);
+            const chatContainer = document.getElementById('chatContainer');
+            chatContainer.addEventListener('scroll', function () {
+                if (chatContainer.scrollTop + chatContainer.clientHeight < chatContainer.scrollHeight) {
+                    userIsScrolling = true;
+                } else {
+                    userIsScrolling = false;
+                }
+            });
+        };
 
-function handleResize() {
-    const currentHeight = window.innerHeight;
-    if (currentHeight < 500) {
-        if (!isKeyboardVisible) {
-            isKeyboardVisible = true;
-            adjustInputBoxPosition(true);
-        }
-    } else {
-        if (isKeyboardVisible) {
-            isKeyboardVisible = false;
-            adjustInputBoxPosition(false);
-        }
-    }
-}
-
-function adjustInputBoxPosition(isKeyboardVisible) {
-    const inputContainer = document.querySelector('.input-container');
-    if (isKeyboardVisible) {
-        inputContainer.style.bottom = '20px';
-    } else {
-        inputContainer.style.bottom = '20px';
-    }
-}
-
-function typeText(text, element, delay = 50, callback) {
-    element.innerHTML = '';
-    let i = 0;
-
-    function type() {
-        if (i < text.length) {
-            const char = text.charAt(i);
-
-            if (char === '|') {
-                i++;
-                setTimeout(type, delay * 10);
-            } else if (char === '~') {
-                element.innerHTML += '<br>';
-                i++;
-                type();
+        function handleResize() {
+            const currentHeight = window.innerHeight;
+            if (currentHeight < 500) {
+                if (!isKeyboardVisible) {
+                    isKeyboardVisible = true;
+                    adjustInputBoxPosition(true);
+                }
             } else {
-                element.innerHTML += char;
-                i++;
-                setTimeout(type, delay);
+                if (isKeyboardVisible) {
+                    isKeyboardVisible = false;
+                    adjustInputBoxPosition(false);
+                }
             }
-        } else {
-            if (callback) callback();
         }
-    }
 
-    type();
-}
+        function adjustInputBoxPosition(isKeyboardVisible) {
+            const inputContainer = document.querySelector('.input-container');
+            if (isKeyboardVisible) {
+                inputContainer.style.bottom = '20px';
+            } else {
+                inputContainer.style.bottom = '20px';
+            }
+        }
 
-function enableSendButton() {
-    const sendButton = document.getElementById('sendButton');
-    sendButton.disabled = false;
-    sendButton.classList.add('enabled');
-    sendButton.classList.remove('disabled');
-}
+        function typeText(text, element, delay = 50, callback) {
+            element.innerHTML = '';
+            let i = 0;
 
-function disableSendButton() {
-    const sendButton = document.getElementById('sendButton');
-    sendButton.disabled = true;
-    sendButton.classList.remove('enabled');
-    sendButton.classList.add('disabled');
-}
+            function type() {
+                if (i < text.length) {
+                    const char = text.charAt(i);
 
-function sendMessage() {
+                    if (char === '|') {
+                        i++;
+                        setTimeout(type, delay * 10);
+                    } else if (char === '~') {
+                        element.innerHTML += '<br>';
+                        i++;
+                        type();
+                    } else {
+                        element.innerHTML += char;
+                        i++;
+                        setTimeout(type, delay);
+                    }
+                } else {
+                    if (callback) callback();
+                }
+            }
+
+            type();
+        }
+
+        function enableSendButton() {
+            const sendButton = document.getElementById('sendButton');
+            sendButton.disabled = false;
+            sendButton.classList.add('enabled');
+            sendButton.classList.remove('disabled');
+        }
+
+        function disableSendButton() {
+            const sendButton = document.getElementById('sendButton');
+            sendButton.disabled = true;
+            sendButton.classList.remove('enabled');
+            sendButton.classList.add('disabled');
+        }
+
+        function sendMessage() {
     if (botTyping || botMessageChanged) {
         return;
     }
@@ -388,47 +391,48 @@ function sendMessage() {
     }
 }
 
-document.getElementById('messageInput').addEventListener('keydown', function (event) {
-    if (event.key === 'Enter') {
-        if (event.shiftKey) {
-            const textarea = event.target;
-            const cursorPosition = textarea.selectionStart;
-            textarea.value = textarea.value.substring(0, cursorPosition) + '\n' + textarea.value.substring(cursorPosition);
-            event.preventDefault();
-        } else {
-            event.preventDefault();
-            sendMessage();
-        }
-    }
-});
 
-function addMessageToChat(sender, message, isTypingEffect = false) {
-    const chatContainer = document.getElementById('chatContainer');
-    const messageElement = document.createElement('div');
-    messageElement.className = `message ${sender}-message`;
-
-    // Create a flag to track if the user is at the bottom of the chat container
-    const isAtBottom = chatContainer.scrollHeight - chatContainer.scrollTop === chatContainer.clientHeight;
-
-    if (isTypingEffect) {
-        botTyping = true;
-        disableSendButton();
-        typeText(message, messageElement, 50, () => {
-            botTyping = false;
-            enableSendButton();
-            if (isAtBottom) {
-                chatContainer.scrollTop = chatContainer.scrollHeight; // Scroll to the bottom
+        document.getElementById('messageInput').addEventListener('keydown', function (event) {
+            if (event.key === 'Enter') {
+                if (event.shiftKey) {
+                    const textarea = event.target;
+                    const cursorPosition = textarea.selectionStart;
+                    textarea.value = textarea.value.substring(0, cursorPosition) + '\n' + textarea.value.substring(cursorPosition);
+                    event.preventDefault();
+                } else {
+                    event.preventDefault();
+                    sendMessage();
+                }
             }
         });
-    } else {
-        messageElement.innerText = message;
-        if (isAtBottom) {
-            chatContainer.scrollTop = chatContainer.scrollHeight; // Scroll to the bottom if at the bottom
-        }
-    }
 
-    chatContainer.appendChild(messageElement);
-}
+        function addMessageToChat(sender, message, isTypingEffect = false) {
+            const chatContainer = document.getElementById('chatContainer');
+            const messageElement = document.createElement('div');
+            messageElement.className = `message ${sender}-message`;
+
+            // Create a flag to track if the user is at the bottom of the chat container
+            const isAtBottom = chatContainer.scrollHeight - chatContainer.scrollTop === chatContainer.clientHeight;
+
+            if (isTypingEffect) {
+                botTyping = true;
+                disableSendButton();
+                typeText(message, messageElement, 50, () => {
+                    botTyping = false;
+                    enableSendButton();
+                    if (isAtBottom) {
+                        chatContainer.scrollTop = chatContainer.scrollHeight; // Scroll to the bottom
+                    }
+                });
+            } else {
+                messageElement.innerText = message;
+                if (isAtBottom) {
+                    chatContainer.scrollTop = chatContainer.scrollHeight; // Scroll to the bottom if at the bottom
+                }
+            }
+
+            chatContainer.appendChild(messageElement);
+        }
     </script>
 </body>
 </html>
