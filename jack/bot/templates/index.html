@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>? ? ? ?</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        body {
+    font-family: 'Courier New', Courier, monospace;
+    margin: 0;
+    padding: 0;
+    background: linear-gradient(135deg, #000000, #1a1a1a);
+    color: #00ff00;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+    text-align: center;
+    box-sizing: border-box;
+    padding-top: 5vh; /* Add some gap from the top */
+    padding-bottom: 5vh; /* Add some gap from the bottom */
+}
+
+.slot-machine {
+    display: flex;
+    flex-direction: row;
+    gap: 2vw;
+    justify-content: center;
+    align-items: center;
+    padding: 2vw;
+    box-sizing: border-box;
+}
+
+.reel {
+    width: 20vw;
+    height: 20vw;
+    max-width: 250px;
+    max-height: 250px;
+    background-color: rgba(30, 30, 30, 0.9);
+    border: 3px solid #00ff00;
+    border-radius: 15px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    box-shadow: 0 0 20px rgba(0, 255, 0, 0.7);
+    font-family: 'Press Start 2P', monospace;
+    flex-shrink: 0;
+    overflow: hidden;
+    margin: 0 auto; /* Center the reels */
+}
+
+.number, .word {
+    font-size: 10vw;
+    font-weight: bold;
+    color: #00ff00;
+    line-height: 1;
+    text-shadow: 0 0 10px rgba(0, 255, 0, 0.8);
+}
+
+#welcomeMessage {
+    font-family: 'Press Start 2P', monospace;
+    color: #00ff00;
+    text-shadow: 0 0 10px rgba(0, 255, 0, 0.8);
+    margin-top: 2vw;
+    display: none;
+    white-space: pre-wrap;
+    overflow: hidden;
+    line-height: 1.5;
+    font-size: 1.2em; /* Reduced font size */
+    text-align: center;
+    max-width: 90vw; /* Ensures text doesn't go too wide on large screens */
+    margin-bottom: 1.5em; /* Adds space between the text and the arrow */
+}
+
+.typing-active::after {
+    content: "";
+    display: inline-block;
+    background-color: #00ff00;
+    width: 0.15em;
+    height: 1em;
+    animation: blink 1s steps(2, start) infinite;
+    vertical-align: center;
+    margin-left: 0.1ch;
+}
+
+@keyframes blink {
+    to {
+        visibility: hidden;
+    }
+}
+
+@media (max-width: 1024px) {
+    .reel {
+        width: 18vw;
+        height: 18vw;
+    }
+
+    .number, .word {
+        font-size: 8vw;
+    }
+
+    .slot-machine {
+        gap: 4vw;
+    }
+
+    #welcomeMessage {
+        font-size: 1.1em; /* Slightly smaller text for mid-sized screens */
+    }
+}
+
+@media (max-width: 768px) {
+    .slot-machine {
+        flex-direction: column;
+        gap: 2vw;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .reel {
+        width: 25vw;
+        height: 25vw;
+    }
+
+    .number, .word {
+        font-size: 15vw;
+    }
+
+    #welcomeMessage {
+        font-size: 1em; /* Smaller text for mobile */
+    }
+}
+
+@media (max-width: 480px) {
+    .slot-machine {
+        flex-direction: column;
+        gap: 2vw;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .reel {
+        width: 30vw;
+        height: 30vw;
+    }
+
+    .number, .word {
+        font-size: 18vw;
+    }
+
+    #welcomeMessage {
+        font-size: 1em; /* Same size for small screens */
+    }
+}
+
+#arrow {
+    font-size: 3em; 
+    color: #00ff00; 
+    display: none;
+    margin-top: -0.5em; /* Adjust spacing between the message and arrow */
+    cursor: pointer;
+}
+
+    </style>
+
+</head>
+<body>
+
+    <div class="slot-machine">
+        <div class="reel" id="reel1"></div>
+        <div class="reel" id="reel2"></div>
+        <div class="reel" id="reel3"></div>
+        <div class="reel" id="reel4"></div>
+    </div>
+
+    <p id="welcomeMessage" class="typing-active"></p>
+    <a href="/message/">
+        <p id="arrow">→</p>
+    </a>
+
+    <script>
+        const numbers = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+        const targetWord = ['J', 'A', 'C', 'K'];
+        const welcomeText = "Welcome!| it's good to see you.|~Let's get started ?"; // Using <br> for line breaks
+
+        function getRandomNumber() {
+            return numbers[Math.floor(Math.random() * numbers.length)];
+        }
+
+        function getNextTargetLetter(index) {
+            return targetWord[index % targetWord.length];
+        }
+
+        let reelInterval;
+        let reelStatus = [false, false, false, false];
+        let letterIndex = 0;
+        let previousNumbers = ['', '', '', ''];
+
+        function updateReels() {
+            const reels = document.querySelectorAll('.reel');
+
+            reels.forEach((reel, index) => {
+                if (!reelStatus[index]) {
+                    let newNumber;
+                    do {
+                        newNumber = getRandomNumber();
+                    } while (newNumber === previousNumbers[index]);
+
+                    reel.innerHTML = `<span class="number">${newNumber}</span>`;
+                    previousNumbers[index] = newNumber;
+                }
+            });
+        }
+
+        reelInterval = setInterval(updateReels, 100);
+
+        function stopReelsAtRandom() {
+            if (letterIndex < 4) {
+                const reels = document.querySelectorAll('.reel');
+                reels[letterIndex].innerHTML = `<span class="word">${targetWord[letterIndex]}</span>`;
+                reelStatus[letterIndex] = true;
+                letterIndex++;
+            }
+        }
+
+        function typeText(text, element, delay = 100, callback) {
+            element.innerHTML = ''; 
+            let i = 0;
+
+            function type() {
+                if (i < text.length) {
+                    const char = text.charAt(i);
+                    if (char === '|') {
+                        i++;
+                        setTimeout(type, delay * 10);
+                    } else if (char === '~') {
+                        element.innerHTML += '<br>';
+                        i++;
+                        type();
+                    } else {
+                        element.innerHTML += char;
+                        i++;
+                        setTimeout(type, delay);
+                    }
+                } else {
+                    callback();  // Call the callback when typing is finished
+                }
+            }
+            type();
+        }
+
+        function showArrow() {
+            setTimeout(() => {
+                const arrow = document.getElementById('arrow');
+                arrow.style.display = 'inline-block';  // Show the arrow after a small delay
+            }, 500);  // Delay before showing the arrow (adjust this delay as needed)
+        }
+
+        setTimeout(() => {
+            const stopInterval = setInterval(() => {
+                stopReelsAtRandom();
+                if (letterIndex === 4) {
+                    clearInterval(stopInterval);
+                    setTimeout(() => {
+                        const welcomeMessage = document.getElementById('welcomeMessage');
+                        welcomeMessage.style.display = 'block';
+                        typeText(welcomeText, welcomeMessage, 50, showArrow);  // Pass the callback to show the arrow
+                    }, 500);
+                }
+            }, 700);
+        }, 700);
+    </script>
+
+</body>
+</html>
