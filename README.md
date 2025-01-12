@@ -8,6 +8,8 @@ This project is a Django-based chatbot with support for user registration and an
 - **Admin Mode**: Admin users can enter a secret key to access admin commands like viewing registrations, clearing data, and more.
 - **Bot Responses**: The bot can answer predefined questions and suggest corrections for user commands.
 - **Admin Commands**: Admins can use commands like `/show` to view registrations and `/clear` to clear the session.
+- **User Commands**: Admins can use commands like `/register` to register and `/stop` to stop the registration session.
+
 
 ## Prerequisites
 
@@ -39,6 +41,7 @@ Users can also use a few commands to interact with the bot:
 - **/stop**: Stops the registration process and clears any data entered by the user.
 - **/cmd**: Lists all available user-related commands.
 - **/cmd-admin**: Lists admin-related commands (admin-only feature).
+- **/clear**: To clear the session data.
 
 #### 3. **Registration Process**
 
@@ -103,6 +106,8 @@ User-related commands:
 - `/register`: To start the registration process and register user details.
 - `/stop`: To stop the current registration process and clear entered data.
 - `/cmd`: To show the list of user-related commands.
+- `/clear`: To clear the session data.
+
 
 #### 6. **Command Suggestions**
 
@@ -137,7 +142,11 @@ The registration data is stored in an Excel file (`register.xlsx`). Each event w
 - Class Name
 - Roll Number
 
-### 8. **Error Handling**
+### 8. **Database Integration**
+
+Instead of an Excel sheet you can use any database of your choice or any cloud cluster of you choice to store the data and show it as per your requirement. The database update will be added soon in the code. 
+
+### 9. **Error Handling**
 
 If an error occurs during processing, the bot will return an error message: "An error occurred while processing your request. Please try again later."
 
