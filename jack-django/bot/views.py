@@ -30,6 +30,7 @@ import os
 def save_to_excel(name, mobile, email, course, class_name, roll_number, event_name='Default Event'):
     file_path = "register.xlsx"
     
+    # Check if the file exists
     if not os.path.exists(file_path):
         wb = Workbook()
         ws = wb.active
@@ -37,17 +38,23 @@ def save_to_excel(name, mobile, email, course, class_name, roll_number, event_na
         ws.append(['Name', 'Mobile', 'Email', 'Course', 'Class Name', 'Roll Number'])
     else:
         wb = load_workbook(file_path)
+        
+        # Check if the event sheet exists, if not create it
         if event_name in wb.sheetnames:
             ws = wb[event_name]
         else:
-            ws = wb.create_sheet(title=event_name)
-            ws.append(['Name', 'Mobile', 'Email', 'Course', 'Class Name', 'Roll Number'])
+            # If the event name doesn't exist, use the first sheet or add a new one
+            ws = wb.active  # Use the first sheet
+            # Only append headers if the sheet is empty (i.e., no rows except the header)
+            if not any(ws.iter_rows(min_row=1, max_row=1, values_only=True)):  # If no rows exist, append headers
+                ws.append(['Name', 'Mobile', 'Email', 'Course', 'Class Name', 'Roll Number'])
 
         # Check for duplicate registration
         for row in ws.iter_rows(min_row=2, values_only=True):
             if row[0] == name and str(row[1]) == mobile:
                 return "already_registered"
 
+    # Append the new registration data to the sheet
     ws.append([name, mobile, email, course, class_name, roll_number])
     wb.save(file_path)
     return "registered"
@@ -98,7 +105,7 @@ def get_bot_response(request):
         # Handle /register command
         if user_message == "/register":
             user_registration_state[user_id]['registration_step'] = 1
-            return JsonResponse({'response': "Please enter your name (in all caps):"})
+            return JsonResponse({'response': "Please enter your name:"})
 
         # Handle /stop command to stop the registration process
         if user_message == "/stop":
@@ -123,6 +130,7 @@ def get_bot_response(request):
                 "/register": "To start the registration process and register user details.",
                 "/stop": "To stop the current registration process and clear entered data.",
                 "/cmd": "To show the list of user-related commands.",
+                "/clear": "To clear the chat or reset the session."
             }
             command_list = "\n".join([f"{cmd}: {desc}" for cmd, desc in commands.items()])
             return JsonResponse({'response': f"User-related commands:\n{command_list}"})
@@ -192,9 +200,10 @@ def get_bot_response(request):
             registration_step = user_registration_state[user_id]['registration_step']
 
             if registration_step == 1:
-                if not user_message.isupper():
-                    return JsonResponse({'response': "Please enter your name in all uppercase letters."})
-
+                user_message = user_message.strip().upper()  # Convert to uppercase and strip whitespace
+                if not user_message:
+                    return JsonResponse({'response': "Name cannot be empty. Please enter a valid name."})
+                
                 user_registration_state[user_id]['name'] = user_message
                 user_registration_state[user_id]['registration_step'] = 2
                 return JsonResponse({'response': "Please enter your mobile number:"})
@@ -208,14 +217,18 @@ def get_bot_response(request):
                 return JsonResponse({'response': "Please enter your email:"})
 
             if registration_step == 3:
+                user_message = user_message.strip().lower()  # Convert input to lowercase and remove leading/trailing spaces
+
                 if not user_message.endswith("@gmail.com"):
                     return JsonResponse({'response': "Please enter a valid email address ending with @gmail.com."})
 
                 user_registration_state[user_id]['email'] = user_message
                 user_registration_state[user_id]['registration_step'] = 4
-                return JsonResponse({'response': "Please enter your course name (BE or DIPLOMA, in all caps, max 1 space):"})
+                return JsonResponse({'response': "Please enter your course name, BE or DIPLOMA:"})
 
             if registration_step == 4:
+                user_message = user_message.strip().upper()  # Convert input to uppercase and remove any leading/trailing spaces
+
                 if user_message not in ["BE", "DIPLOMA"] and len(user_message.split()) > 2:
                     return JsonResponse({'response': "Please enter a valid course name: BE or DIPLOMA, in all caps, with max 1 space."})
 
@@ -224,6 +237,8 @@ def get_bot_response(request):
                 return JsonResponse({'response': "Please enter your class name (1 space only, no special characters):"})
 
             if registration_step == 5:
+                user_message = user_message.strip().upper()  # Convert input to uppercase and remove leading/trailing spaces
+                
                 if not re.match(r'^[A-Z]+\s?[A-Z]+$', user_message):
                     return JsonResponse({'response': "Please enter a valid class name: 1 space only, no special characters, and all in uppercase."})
 
@@ -248,7 +263,8 @@ def get_bot_response(request):
                 if registration_status == "already_registered":
                     return JsonResponse({'response': "You are already registered with this name and mobile number."})
                 else:
-                    del user_registration_state[user_id]
+                    if user_id in user_registration_state:
+                        del user_registration_state[user_id]
                     try:
                         wb = load_workbook("register.xlsx")
                         ws = wb.active
